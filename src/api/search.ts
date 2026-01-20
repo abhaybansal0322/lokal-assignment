@@ -49,12 +49,13 @@ export async function searchSongs(query: string, page: number): Promise<SearchRe
 
         return {
             id: item.id,
-            name: item.name,
-            primaryArtists: item.primaryArtists,
+            title: item.name,
+            artist: item.primaryArtists,
             duration: typeof item.duration === 'string' ? parseInt(item.duration, 10) : item.duration,
-            image: imageUrl,
+            imageUrl: imageUrl,
         };
     });
+
 
     return {
         songs,

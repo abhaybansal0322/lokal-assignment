@@ -66,12 +66,13 @@ export async function getSongById(id: string): Promise<PlayerSong> {
 
     return {
         id: songData.id,
-        name: songData.name,
+        title: songData.name,
         duration: typeof songData.duration === 'string' ? parseInt(songData.duration, 10) : songData.duration,
-        albumName: songData.album.name,
-        primaryArtists: songData.artists.primary.map((artist) => artist.name),
-        image: imageUrl,
+        album: songData.album.name,
+        artist: songData.artists.primary.map((artist) => artist.name).join(', '), // Joined string as per 'artist: string' interface
+        imageUrl: imageUrl,
         audioUrl: audioUrl,
     };
+
 }
 

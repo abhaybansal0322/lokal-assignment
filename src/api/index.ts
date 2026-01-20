@@ -9,3 +9,7 @@
  * Example usage later:
  * import { searchSongs, getSongById } from '@/api'
  */
+
+export { searchSongs } from './search';
+export { getSongById } from './songs';
+

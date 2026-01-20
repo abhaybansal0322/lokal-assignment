@@ -1,10 +1,196 @@
-import React from 'react';
-import { View, Text } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import {
+    View,
+    Text,
+    TextInput,
+    FlatList,
+    TouchableOpacity,
+    ActivityIndicator,
+    StyleSheet,
+    SafeAreaView,
+    Image,
+} from 'react-native';
+import { searchSongs, getSongById } from '../api';
+import { usePlayerStore } from '../store/playerStore';
+import { SongSummary } from '../types/song';
+import { Colors } from '../constants/Colors';
 
 export default function HomeScreen() {
+    const [query, setQuery] = useState('');
+    const [results, setResults] = useState<SongSummary[]>([]);
+    const [page, setPage] = useState(1);
+    const [loading, setLoading] = useState(false);
+    const [hasMore, setHasMore] = useState(true);
+
+    const setQueue = usePlayerStore((state) => state.setQueue);
+
+    const handleSearch = async () => {
+        if (!query.trim()) return;
+
+        setLoading(true);
+        setPage(1);
+        setResults([]);
+        setHasMore(true);
+
+        try {
+            const { songs, total } = await searchSongs(query, 1);
+            setResults(songs);
+            setHasMore(songs.length < total && songs.length > 0);
+        } catch (error) {
+            console.error('Search failed', error);
+            setHasMore(false);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const loadMore = async () => {
+        if (loading || !hasMore) return;
+
+        setLoading(true);
+        const nextPage = page + 1;
+
+        try {
+            const { songs } = await searchSongs(query, nextPage);
+            if (songs.length === 0) {
+                setHasMore(false);
+            } else {
+                setResults((prev) => [...prev, ...songs]);
+                setPage(nextPage);
+            }
+        } catch (error) {
+            console.error('Load more failed', error);
+            setHasMore(false);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    /**
+     * ✅ CORRECT PLAY HANDLER
+     * - Fetch full song details
+     * - Build playable queue
+     * - Let playerSync + audioService handle playback
+     */
+    const handleSongPress = useCallback(
+        async (song: SongSummary) => {
+            try {
+                setLoading(true);
+
+                const fullSong = await getSongById(song.id);
+
+                // Play only the tapped song (clean & correct)
+                setQueue([fullSong], 0);
+            } catch (error) {
+                console.error('Failed to play song', error);
+            } finally {
+                setLoading(false);
+            }
+        },
+        [setQueue]
+    );
+
+    const renderItem = ({ item }: { item: SongSummary }) => (
+        <TouchableOpacity
+            style={styles.itemContainer}
+            onPress={() => handleSongPress(item)}
+        >
+            <Image source={{ uri: item.imageUrl }} style={styles.itemImage} />
+            <View style={styles.itemInfo}>
+                <Text style={styles.itemTitle} numberOfLines={1}>
+                    {item.title}
+                </Text>
+                <Text style={styles.itemArtist} numberOfLines={1}>
+                    {item.artist}
+                </Text>
+            </View>
+        </TouchableOpacity>
+    );
+
     return (
-        <View>
-            <Text>Home Screen</Text>
-        </View>
+        <SafeAreaView style={styles.container}>
+            <View style={styles.searchContainer}>
+                <TextInput
+                    style={styles.searchInput}
+                    placeholder="Search songs..."
+                    placeholderTextColor={Colors.border}
+                    value={query}
+                    onChangeText={setQuery}
+                    onSubmitEditing={handleSearch}
+                    returnKeyType="search"
+                />
+            </View>
+
+            {loading && page === 1 && (
+                <ActivityIndicator size="large" color={Colors.primary} style={styles.loader} />
+            )}
+
+            <FlatList
+                data={results}
+                renderItem={renderItem}
+                keyExtractor={(item) => item.id}
+                contentContainerStyle={styles.listContent}
+                onEndReached={loadMore}
+                onEndReachedThreshold={0.5}
+                ListFooterComponent={
+                    loading && page > 1 ? <ActivityIndicator color={Colors.primary} /> : null
+                }
+            />
+        </SafeAreaView>
     );
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: Colors.background,
+    },
+    searchContainer: {
+        padding: 16,
+        backgroundColor: Colors.card,
+    },
+    searchInput: {
+        backgroundColor: Colors.background,
+        color: Colors.text,
+        padding: 12,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: Colors.border,
+        fontSize: 16,
+    },
+    loader: {
+        marginTop: 20,
+    },
+    listContent: {
+        padding: 16,
+        paddingBottom: 120,
+    },
+    itemContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 16,
+        padding: 8,
+        backgroundColor: Colors.card,
+        borderRadius: 8,
+    },
+    itemImage: {
+        width: 50,
+        height: 50,
+        borderRadius: 4,
+        backgroundColor: Colors.border,
+    },
+    itemInfo: {
+        flex: 1,
+        marginLeft: 12,
+    },
+    itemTitle: {
+        color: Colors.text,
+        fontSize: 16,
+        fontWeight: '600',
+        marginBottom: 4,
+    },
+    itemArtist: {
+        color: Colors.secondary,
+        fontSize: 14,
+    },
+});
