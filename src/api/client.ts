@@ -1,29 +1,5 @@
-// Client setup placeholder
-/**
- * client.ts
- *
- * Responsibility:
- * - Define the base API URL
- * - Provide a reusable GET request helper
- * - Handle query parameters
- * - Handle network errors and invalid responses
- *
- * This file MUST NOT:
- * - Contain UI logic
- * - Access Zustand store
- * - Know anything about screens or components
- *
- * All other API files must use this client.
- */
-
 export const API_BASE_URL = 'https://saavn.sumit.co';
 
-/**
- * Generic GET helper
- * @param endpoint - The API endpoint (e.g., '/api/search/songs')
- * @param params - Query parameters to be appended to the URL
- * @returns Raw parsed JSON response
- */
 export async function apiGet<T = any>(
     endpoint: string,
     params: Record<string, string | number | boolean> = {}

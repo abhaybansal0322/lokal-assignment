@@ -47,7 +47,7 @@ export const usePlayerStore = create<PlayerState>()(subscribeWithSelector((set, 
             queue: songs,
             currentIndex: initialIndex,
             currentSong: songs[initialIndex] || null,
-            isPlaying: true, // Automatically start playing when queue changes
+            isPlaying: true,
         });
     },
 

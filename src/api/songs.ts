@@ -38,15 +38,9 @@ interface ApiSongResponse {
     data: ApiSongDetail[];
 }
 
-/**
- * Get full song details by ID
- * @param id - The song ID
- * @returns Clean PlayerSong object
- */
 export async function getSongById(id: string): Promise<PlayerSong> {
     const response = await apiGet<ApiSongResponse>(`/api/songs/${id}`);
 
-    // Extract data[0] as per requirement
     const songData = response.data[0];
 
     if (!songData) {

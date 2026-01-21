@@ -17,7 +17,7 @@ export async function initAudioMode() {
 
         });
     } catch (error) {
-        // Fail silently or log if needed, user requested specifically not to throw unless critical
+        // Silently fail
     }
 }
 
@@ -49,7 +49,6 @@ export async function loadAndPlaySong(song: PlayerSong) {
 
     usePlayerStore.getState().setProgress(position, duration);
 
-    // ✅ AUTO NEXT
     if (status.didJustFinish) {
       usePlayerStore.getState().next();
     }
