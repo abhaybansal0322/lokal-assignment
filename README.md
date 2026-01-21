@@ -19,69 +19,114 @@ Then:
 
 ## Architecture
 
-The app is structured to clearly separate UI, state, audio, and API logic.
+The app is structured with a clear separation of concerns to keep state, audio, and UI logic isolated and predictable.
 
 ### 1. API Layer (src/api)
 
-Responsible for all network requests and normalizes raw API responses into clean app-level data.
+Handles all network requests and normalizes raw API responses into clean application models. Prevents UI components from depending on API response structure.
 
-Key files:
-- `search.ts` – search songs
-- `songs.ts` – fetch full song details
+**Key responsibilities:**
+- Song search
+- Fetching full song details (audio URL, images, artists)
+
+**Key files:**
+- `search.ts` – search songs and extract artists
+- `songs.ts` – fetch full song details by ID
 - `client.ts` – shared API client
 
 ### 2. State Management (src/store)
 
-Uses Zustand for lightweight global state managing:
-- Current song
-- Playback state
-- Queue
-- Navigation between songs
+Uses Zustand as a single source of truth for:
+- **Playback state:** current song, isPlaying
+- **Queue management:** array of songs, current index
+- **Position tracking:** current playback position and duration
+- **Queue operations:** add, remove, reorder songs
 
-State does not manage audio playback directly, keeping it predictable and easy to reason about.
+**State persistence:**
+- Queue state (songs and currentIndex) is persisted locally using AsyncStorage
+- Restored on app startup
+- Playback does NOT auto-resume (intentional design choice)
+
+State management is kept free of UI and audio logic.
 
 ### 3. Audio Layer (src/services)
 
-Encapsulates all audio playback logic:
-- Loading / unloading audio
-- Play / pause
-- Next / previous
+Encapsulates all audio playback using Expo AV.
 
-Prevents multiple audio instances and synchronizes audio state with the store via a dedicated sync layer.
+**Handles:**
+- Load / unload audio files
+- Play / pause / stop
+- Auto-advance to next song on completion
+- Playback progress tracking via onPlaybackStatusUpdate listener
+
+Uses a dedicated synchronization layer to keep audio in sync with global state. Prevents multiple audio instances and race conditions.
+
+**Key files:**
+- `audioService.ts` – core audio playback logic
+- `playerSync.ts` – keeps audio and store in sync
 
 ### 4. UI Layer (src/screens, src/components)
 
 **Screens:**
-- Home (search, songs, artists)
-- Player (expanded view)
+- `HomeScreen.tsx` – Search interface with multi-tab filtering (Songs/Artists)
+- `PlayerScreen.tsx` – Full player with progress bar, queue management
 
 **Components:**
-- Mini player (persistent playback control)
+- `MiniPlayer.tsx` – Persistent playback bar (visible on all screens)
 
-UI reads state but does not control audio directly, keeping it declarative and simple.
+**Design principle:** UI components remain declarative and never control audio directly. All state flows through the store.
 
-## Trade-offs & Design Decisions
+## Trade-offs & Decisions
 
-### 1. No progress bar scrubbing
-- The progress bar is visual only
-- Seeking via touch was intentionally excluded to reduce complexity
-- Playback remains stable and predictable
+### 1. Seek bar interaction
 
-### 2. Artists derived from search results
-- No separate artists API is used
-- Artist list is dynamically derived from song search data
-- Keeps implementation simple and avoids unnecessary API calls
+The progress bar is visual only. Seeking via touch (scrubbing) was intentionally not implemented.
 
-### 3. Local polling for playback progress
-- Playback position is read periodically instead of using global listeners
-- Avoids memory leaks and keeps audio logic isolated
+**Reason:**
+Not required by the assignment. Priority was given to stable playback and synchronization.
 
-### 4. No persistence across app restarts
-- Last played song is not restored on app relaunch
-- Out of scope for assignment; avoids AsyncStorage complexity
+### 2. Queue persistence scope
+
+Queue state (songs and current index) is persisted locally. Playback does not auto-resume on app relaunch.
+
+**Reason:**
+Avoids unexpected playback on app start and keeps behavior predictable.
+
+### 3. Queue UI uses simple buttons
+
+Queue management uses ↑ ↓ ✕ buttons instead of drag gestures.
+
+**Reason:**
+Simplicity over complexity. Achieves full queue management functionality without gesture complications.
+
+### 4. Artists derived from search results
+
+No separate artists API. Artist list is dynamically derived from song search data.
+
+**Reason:**
+Keeps implementation simple and avoids unnecessary API calls. Artists are already included in search responses.
+
+### 5. Queue edge-case handling
+
+When the last remaining song in the queue is removed, playback stops and the player UI is dismissed.
+
+**Reason:**
+Clean edge-case handling. The architecture supports graceful degradation in edge cases.
+
+## Summary
+
+This project prioritizes:
+
+✅ **Clean architecture** – Clear separation of concerns  
+✅ **Stable audio playback** – Proper lifecycle management  
+✅ **Proper synchronization** – UI, state, and audio stay in sync  
+✅ **Real-world API handling** – Robust handling of inconsistent or missing data  
+✅ **Local persistence** – Queue survives app reloads  
+✅ **Extensibility** – Easy to add features (shuffle, repeat, offline mode)  
 
 ## Notes
 
 - All songs, artists, and images are fetched dynamically
 - No data is hardcoded
 - The app was tested on a real iOS device using Expo Go
+- Queue state is restored from local storage on app startup
