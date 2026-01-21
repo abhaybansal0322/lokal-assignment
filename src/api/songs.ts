@@ -53,15 +53,12 @@ export async function getSongById(id: string): Promise<PlayerSong> {
         throw new Error(`Song not found for ID: ${id}`);
     }
 
-    console.log(
-        '[SONG API]',
-        songData.name,
-        songData.downloadUrl
-    );
-
     // extract 500x500 image
-    const imageObj = songData.image.find((img) => img.quality === '500x500') || songData.image[songData.image.length - 1];
-    const imageUrl = imageObj ? imageObj.link : '';
+    const imageObj =
+      songData.image.find((img) => img.quality === '500x500') ||
+      songData.image[songData.image.length - 1];
+
+    const imageUrl = imageObj?.url ?? '';
 
     // extract highest quality audio URL
     const audioObj = songData.downloadUrl.find(

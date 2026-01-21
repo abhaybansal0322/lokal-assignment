@@ -12,6 +12,8 @@ export default function MiniPlayer() {
   const play = usePlayerStore((s) => s.play);
   const pause = usePlayerStore((s) => s.pause);
 
+  console.log('[MINI PLAYER SONG]', song);
+
   if (!song) return null;
 
   return (
@@ -31,7 +33,7 @@ export default function MiniPlayer() {
         <Ionicons
           name={isPlaying ? 'pause' : 'play'}
           size={22}
-          color={Colors.primary}
+          color="#FFFFFF"
         />
       </TouchableOpacity>
     </TouchableOpacity>
@@ -44,15 +46,26 @@ const styles = StyleSheet.create({
     bottom: 16,
     left: 16,
     right: 16,
-    backgroundColor: Colors.card,
+    backgroundColor: '#111111',
     flexDirection: 'row',
     alignItems: 'center',
     padding: 12,
     borderRadius: 14,
-    elevation: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 12,
   },
   image: { width: 40, height: 40, borderRadius: 8 },
   text: { flex: 1, marginLeft: 12 },
-  title: { fontSize: 14, fontWeight: '600' },
-  artist: { fontSize: 12, color: Colors.secondary },
+  title: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  artist: {
+    fontSize: 12,
+    color: '#B3B3B3',
+  },
 });

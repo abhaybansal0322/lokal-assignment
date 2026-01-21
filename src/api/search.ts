@@ -12,10 +12,18 @@ interface ApiSongImage {
     link: string;
 }
 
+interface ApiArtist {
+    name: string;
+}
+
+interface ApiArtists {
+    primary: ApiArtist[];
+}
+
 interface ApiSongResult {
     id: string;
     name: string;
-    primaryArtists: string;
+    artists: ApiArtists;
     duration: number | string;
     image: ApiSongImage[];
 }
@@ -44,17 +52,22 @@ export async function searchSongs(query: string, page: number): Promise<SearchRe
 
     const songs: SongSummary[] = results.map((item) => {
         // Find 500x500 image, fallback to the last one (usually highest quality) or first
-        const imageObj = item.image.find((img) => img.quality === '500x500') || item.image[item.image.length - 1];
-        const imageUrl = imageObj ? imageObj.link : '';
+        const imageObj =
+            item.image.find((img) => img.quality === '500x500') ||
+            item.image[item.image.length - 1];
 
         return {
             id: item.id,
             title: item.name,
-            artist: item.primaryArtists || 'Unknown Artist',
-            duration: typeof item.duration === 'string'
-                ? parseInt(item.duration, 10)
-                : item.duration,
-            imageUrl,
+            artist:
+                item.artists?.primary
+                    ?.map((a) => a.name)
+                    .join(', ') || 'Unknown Artist',
+            duration:
+                typeof item.duration === 'string'
+                    ? parseInt(item.duration, 10)
+                    : item.duration,
+            imageUrl: imageObj?.url ?? '',
         };
     });
 

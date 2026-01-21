@@ -24,6 +24,13 @@ export default function HomeScreen() {
 
   const setQueue = usePlayerStore((s) => s.setQueue);
 
+  const handleGoHome = () => {
+    setQuery('');
+    setResults([]);
+    setArtists([]);
+    setActiveTab('Suggested');
+  };
+
   const handleSearch = async () => {
     if (!query.trim()) return;
     const { songs } = await searchSongs(query, 1);
@@ -44,7 +51,6 @@ export default function HomeScreen() {
 
     const artistArray = Array.from(artistSet);
     setArtists(artistArray);
-    console.log('[ARTISTS]', artistArray);
   };
 
   const playSong = async (song: SongSummary) => {
@@ -96,6 +102,14 @@ export default function HomeScreen() {
             />
             <Text style={styles.headerTitle}>Music Player</Text>
           </View>
+
+          <TouchableOpacity onPress={handleGoHome} style={styles.homeButton}>
+            <Ionicons
+              name="home"
+              size={22}
+              color={Colors.primary}
+            />
+          </TouchableOpacity>
         </View>
 
         {/* Search */}
@@ -166,6 +180,9 @@ const styles = StyleSheet.create({
   },
 
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingBottom: 12,
   },
@@ -173,6 +190,10 @@ const styles = StyleSheet.create({
   headerLeft: { 
     flexDirection: 'row', 
     alignItems: 'center' 
+  },
+
+  homeButton: {
+    padding: 4,
   },
 
   headerTitle: {
