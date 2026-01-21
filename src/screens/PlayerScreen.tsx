@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -9,6 +9,7 @@ import { Colors } from '../constants/Colors';
 export default function PlayerScreen() {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
+  const [showQueue, setShowQueue] = useState(false);
   const song = usePlayerStore((s) => s.currentSong);
   const isPlaying = usePlayerStore((s) => s.isPlaying);
   const play = usePlayerStore((s) => s.play);
@@ -17,6 +18,11 @@ export default function PlayerScreen() {
   const previous = usePlayerStore((s) => s.previous);
   const position = usePlayerStore((s) => s.position);
   const duration = usePlayerStore((s) => s.duration);
+  const queue = usePlayerStore((s) => s.queue);
+  const currentIndex = usePlayerStore((s) => s.currentIndex);
+  const playSongAtIndex = usePlayerStore((s) => s.playSongAtIndex);
+  const removeFromQueue = usePlayerStore((s) => s.removeFromQueue);
+  const moveQueueItem = usePlayerStore((s) => s.moveQueueItem);
 
   if (!song) return null;
 
@@ -77,6 +83,73 @@ export default function PlayerScreen() {
           </TouchableOpacity>
           <Ionicons name="play-skip-forward" size={28} onPress={next} />
         </View>
+
+        {/* Queue Toggle Button */}
+        <TouchableOpacity
+          onPress={() => setShowQueue((v) => !v)}
+          style={styles.queueToggle}
+        >
+          <Text style={styles.queueToggleText}>
+            {showQueue ? 'Hide Queue' : 'Show Queue'}
+          </Text>
+        </TouchableOpacity>
+
+        {/* Queue List */}
+        {showQueue && (
+          <ScrollView style={styles.queueContainer}>
+            {queue.map((s, index) => (
+              <View
+                key={s.id + index}
+                style={[
+                  styles.queueItem,
+                  index === currentIndex && styles.activeQueueItem,
+                ]}
+              >
+                <TouchableOpacity
+                  style={{ flex: 1 }}
+                  onPress={() => playSongAtIndex(index)}
+                >
+                  <Text
+                    style={styles.queueTitle}
+                    numberOfLines={1}
+                  >
+                    {s.title}
+                  </Text>
+                  <Text
+                    style={styles.queueArtist}
+                    numberOfLines={1}
+                  >
+                    {s.artist}
+                  </Text>
+                </TouchableOpacity>
+
+                <View style={styles.queueActions}>
+                  <TouchableOpacity
+                    onPress={() => moveQueueItem(index, index - 1)}
+                    disabled={index === 0}
+                  >
+                    <Text style={[styles.queueAction, index === 0 && styles.disabled]}>↑</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    onPress={() => moveQueueItem(index, index + 1)}
+                    disabled={index === queue.length - 1}
+                  >
+                    <Text style={[styles.queueAction, index === queue.length - 1 && styles.disabled]}>↓</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    onPress={() => removeFromQueue(index)}
+                  >
+                    <Text style={[styles.queueAction, styles.remove]}>
+                      ✕
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
+          </ScrollView>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -171,6 +244,67 @@ const styles = StyleSheet.create({
   time: {
     fontSize: 12,
     color: Colors.secondary,
+  },
+
+  queueToggle: {
+    marginTop: 20,
+  },
+
+  queueToggleText: {
+    color: Colors.primary,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+
+  queueContainer: {
+    marginTop: 20,
+    width: '100%',
+    paddingHorizontal: 16,
+    maxHeight: 200,
+  },
+
+  queueItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+
+  activeQueueItem: {
+    backgroundColor: Colors.card,
+  },
+
+  queueTitle: {
+    color: Colors.text,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+
+  queueArtist: {
+    color: Colors.secondary,
+    fontSize: 12,
+  },
+
+  queueActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginLeft: 10,
+  },
+
+  queueAction: {
+    fontSize: 18,
+    color: Colors.secondary,
+  },
+
+  disabled: {
+    color: '#666',
+    opacity: 0.5,
+  },
+
+  remove: {
+    color: '#E53935',
   },
 });
 
