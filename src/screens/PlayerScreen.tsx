@@ -4,14 +4,12 @@ import { usePlayerStore } from '../store/playerStore';
 import { Colors } from '../constants/Colors';
 
 export default function PlayerScreen() {
-    const { currentSong, isPlaying, play, pause, next, previous } = usePlayerStore((state) => ({
-        currentSong: state.currentSong,
-        isPlaying: state.isPlaying,
-        play: state.play,
-        pause: state.pause,
-        next: state.next,
-        previous: state.previous,
-    }));
+    const currentSong = usePlayerStore((state) => state.currentSong);
+    const isPlaying = usePlayerStore((state) => state.isPlaying);
+    const play = usePlayerStore((state) => state.play);
+    const pause = usePlayerStore((state) => state.pause);
+    const next = usePlayerStore((state) => state.next);
+    const previous = usePlayerStore((state) => state.previous);
 
     if (!currentSong) {
         return null;
@@ -72,7 +70,7 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: Colors.background,
         alignItems: 'center',
-        justifyContent: 'center',
+        paddingTop: 24,
     },
     artContainer: {
         marginBottom: 30,
@@ -83,25 +81,25 @@ const styles = StyleSheet.create({
         elevation: 8,
     },
     albumArt: {
-        width: 280,
-        height: 280,
-        borderRadius: 12,
+        width: 300,
+        height: 300,
+        borderRadius: 24,
         backgroundColor: Colors.border,
     },
     infoContainer: {
         alignItems: 'center',
-        marginBottom: 30,
+        marginBottom: 32,
         paddingHorizontal: 20,
     },
     title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: Colors.text,
-        marginBottom: 8,
+        fontSize: 22,
+        fontWeight: '700',
         textAlign: 'center',
+        color: Colors.text,
     },
     artist: {
-        fontSize: 18,
+        fontSize: 16,
+        marginTop: 6,
         color: Colors.secondary,
         textAlign: 'center',
     },
@@ -133,7 +131,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        width: '70%',
+        width: '75%',
+        marginTop: 32,
     },
     controlButton: {
         padding: 10,

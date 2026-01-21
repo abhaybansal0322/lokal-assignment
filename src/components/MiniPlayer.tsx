@@ -15,12 +15,10 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function MiniPlayer() {
     const navigation = useNavigation<NavigationProp>();
-    const { currentSong, isPlaying, play, pause } = usePlayerStore((state) => ({
-        currentSong: state.currentSong,
-        isPlaying: state.isPlaying,
-        play: state.play,
-        pause: state.pause,
-    }));
+    const currentSong = usePlayerStore((state) => state.currentSong);
+    const isPlaying = usePlayerStore((state) => state.isPlaying);
+    const play = usePlayerStore((state) => state.play);
+    const pause = usePlayerStore((state) => state.pause);
 
     if (!currentSong) {
         return null;
@@ -76,14 +74,18 @@ const styles = StyleSheet.create({
         bottom: 0,
         left: 0,
         right: 0,
-        height: 64,
-        backgroundColor: Colors.card,
+        height: 72,
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 15,
-        borderTopWidth: 1,
-        borderTopColor: Colors.border,
-        paddingBottom: 0,
+        paddingHorizontal: 16,
+        backgroundColor: Colors.card,
+        borderTopLeftRadius: 16,
+        borderTopRightRadius: 16,
+        shadowColor: '#000',
+        shadowOpacity: 0.15,
+        shadowOffset: { width: 0, height: -4 },
+        shadowRadius: 8,
+        elevation: 20,
     },
     contentContainer: {
         flex: 1,
@@ -92,9 +94,9 @@ const styles = StyleSheet.create({
     },
 
     image: {
-        width: 40,
-        height: 40,
-        borderRadius: 4,
+        width: 48,
+        height: 48,
+        borderRadius: 12,
         backgroundColor: Colors.border,
     },
     textContainer: {

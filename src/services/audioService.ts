@@ -22,9 +22,7 @@ export async function initAudioMode() {
 
 
 export async function loadAndPlaySong(song: PlayerSong) {
-    if (currentSongId === song.id) {
-        return;
-    }
+    if (currentSongId === song.id) return;
 
     if (sound) {
         await sound.stopAsync();
@@ -35,24 +33,17 @@ export async function loadAndPlaySong(song: PlayerSong) {
     try {
         const { sound: newSound } = await Audio.Sound.createAsync(
             { uri: song.audioUrl },
-            { shouldPlay: true }
+            { shouldPlay: false }
         );
 
         sound = newSound;
         currentSongId = song.id;
 
-        sound.setOnPlaybackStatusUpdate((status) => {
-            if (!status.isLoaded) {
-                if (status.error) {
-                    console.error('Playback Error:', status.error);
-                }
-            }
-        });
-
+        // ✅ play only once, manually
+        await newSound.playAsync();
 
     } catch (error) {
         console.error('Failed to load song:', error);
-        // Cleanup if load failed
         sound = null;
         currentSongId = null;
     }
@@ -60,7 +51,10 @@ export async function loadAndPlaySong(song: PlayerSong) {
 
 export async function play() {
     if (sound) {
-        await sound.playAsync();
+        const status = await sound.getStatusAsync();
+        if (status.isLoaded && !status.isPlaying) {
+            await sound.playAsync();
+        }
     }
 }
 

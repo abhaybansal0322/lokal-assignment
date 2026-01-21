@@ -12,36 +12,45 @@ let previousIsPlaying: boolean | null = null;
 let unsubscribe: (() => void) | null = null;
 
 export function initPlayerSync() {
-    // 1. Guard against multiple initialization
-    if (unsubscribe) {
-        return;
-    }
+    if (unsubscribe) return;
 
-    // 2. Initialize audio mode
     initAudioMode();
 
-    // 3. Subscribe to the Zustand store
-    unsubscribe = usePlayerStore.subscribe((state) => {
-        // A. Handle song changes
-        const currentSongId = state.currentSong?.id || null;
+    // 1️⃣ Subscribe ONLY to currentSong
+    const unsubscribeSong = usePlayerStore.subscribe(
+        (state) => state.currentSong,
+        (currentSong) => {
+            const songId = currentSong?.id ?? null;
 
-        if (currentSongId !== previousSongId) {
-            if (state.currentSong) {
-                loadAndPlaySong(state.currentSong);
-            } else {
-                stopAndUnload();
+            if (songId !== previousSongId) {
+                if (currentSong) {
+                    loadAndPlaySong(currentSong);
+                } else {
+                    stopAndUnload();
+                }
+                previousSongId = songId;
             }
-            previousSongId = currentSongId;
         }
+    );
 
-        // B. Handle play / pause changes
-        if (state.isPlaying !== previousIsPlaying) {
-            if (state.isPlaying) {
-                play();
-            } else {
-                pause();
+    // 2️⃣ Subscribe ONLY to isPlaying
+    const unsubscribePlayState = usePlayerStore.subscribe(
+        (state) => state.isPlaying,
+        (isPlaying) => {
+            if (isPlaying !== previousIsPlaying) {
+                if (isPlaying) {
+                    play();
+                } else {
+                    pause();
+                }
+                previousIsPlaying = isPlaying;
             }
-            previousIsPlaying = state.isPlaying;
         }
-    });
+    );
+
+    // 3️⃣ Single unsubscribe handler
+    unsubscribe = () => {
+        unsubscribeSong();
+        unsubscribePlayState();
+    };
 }

@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { subscribeWithSelector } from 'zustand/middleware';
 import { PlayerSong } from '../types/song';
 
 interface PlayerState {
@@ -16,7 +17,7 @@ interface PlayerState {
     previous: () => void;
 }
 
-export const usePlayerStore = create<PlayerState>((set, get) => ({
+export const usePlayerStore = create<PlayerState>()(subscribeWithSelector((set, get) => ({
     currentSong: null,
     isPlaying: false,
     queue: [],
@@ -83,5 +84,5 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
             });
         }
     },
-}));
+})));
 

@@ -125,6 +125,14 @@ export default function HomeScreen() {
                 <ActivityIndicator size="large" color={Colors.primary} style={styles.loader} />
             )}
 
+            {!loading && results.length === 0 && (
+                <View style={{ marginTop: 48, alignItems: 'center' }}>
+                    <Text style={{ color: Colors.secondary, fontSize: 16 }}>
+                        Search for songs to begin
+                    </Text>
+                </View>
+            )}
+
             <FlatList
                 data={results}
                 renderItem={renderItem}
@@ -146,17 +154,19 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.background,
     },
     searchContainer: {
-        padding: 16,
-        backgroundColor: Colors.card,
+        paddingHorizontal: 16,
+        paddingTop: 12,
+        paddingBottom: 8,
+        backgroundColor: Colors.background,
     },
     searchInput: {
-        backgroundColor: Colors.background,
-        color: Colors.text,
-        padding: 12,
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: Colors.border,
+        height: 48,
+        borderRadius: 12,
+        backgroundColor: Colors.card,
+        paddingHorizontal: 16,
         fontSize: 16,
+        color: Colors.text,
+        borderWidth: 0,
     },
     loader: {
         marginTop: 20,
@@ -168,15 +178,15 @@ const styles = StyleSheet.create({
     itemContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 16,
-        padding: 8,
+        padding: 12,
+        marginBottom: 12,
+        borderRadius: 16,
         backgroundColor: Colors.card,
-        borderRadius: 8,
     },
     itemImage: {
-        width: 50,
-        height: 50,
-        borderRadius: 4,
+        width: 56,
+        height: 56,
+        borderRadius: 12,
         backgroundColor: Colors.border,
     },
     itemInfo: {
@@ -184,13 +194,13 @@ const styles = StyleSheet.create({
         marginLeft: 12,
     },
     itemTitle: {
-        color: Colors.text,
         fontSize: 16,
         fontWeight: '600',
-        marginBottom: 4,
+        color: Colors.text,
     },
     itemArtist: {
-        color: Colors.secondary,
         fontSize: 14,
+        color: Colors.secondary,
+        marginTop: 4,
     },
 });
