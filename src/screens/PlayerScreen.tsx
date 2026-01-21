@@ -1,159 +1,95 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import { usePlayerStore } from '../store/playerStore';
 import { Colors } from '../constants/Colors';
 
 export default function PlayerScreen() {
-    const currentSong = usePlayerStore((state) => state.currentSong);
-    const isPlaying = usePlayerStore((state) => state.isPlaying);
-    const play = usePlayerStore((state) => state.play);
-    const pause = usePlayerStore((state) => state.pause);
-    const next = usePlayerStore((state) => state.next);
-    const previous = usePlayerStore((state) => state.previous);
+  const navigation = useNavigation();
+  const song = usePlayerStore((s) => s.currentSong);
+  const isPlaying = usePlayerStore((s) => s.isPlaying);
+  const play = usePlayerStore((s) => s.play);
+  const pause = usePlayerStore((s) => s.pause);
+  const next = usePlayerStore((s) => s.next);
+  const previous = usePlayerStore((s) => s.previous);
 
-    if (!currentSong) {
-        return null;
-    }
+  if (!song) return null;
 
-    const handlePlayPause = () => {
-        if (isPlaying) {
-            pause();
-        } else {
-            play();
-        }
-    };
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Text style={styles.back}>‹ Home</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Player</Text>
+        <View style={{ width: 40 }} />
+      </View>
 
-    return (
-        <SafeAreaView style={styles.container}>
-            {/* Album Art */}
-            <View style={styles.artContainer}>
-                <Image source={{ uri: currentSong.imageUrl }} style={styles.albumArt} />
-            </View>
+      <Image source={{ uri: song.imageUrl }} style={styles.art} />
 
-            {/* Song Info */}
-            <View style={styles.infoContainer}>
-                <Text style={styles.title} numberOfLines={1}>{currentSong.title}</Text>
-                <Text style={styles.artist} numberOfLines={1}>{currentSong.artist}</Text>
-            </View>
+      <Text style={styles.title}>{song.title}</Text>
+      <Text style={styles.artist}>{song.artist}</Text>
 
-            {/* Seek Bar Placeholder */}
-            <View style={styles.seekContainer}>
-                <View style={styles.seekBarTrack}>
-                    <View style={styles.seekBarProgress} />
-                </View>
-                <View style={styles.timeLabels}>
-                    <Text style={styles.timeText}>0:00</Text>
-                    <Text style={styles.timeText}>-:--</Text>
-                </View>
-            </View>
+      <View style={styles.seekTrack}>
+        <View style={styles.seekProgress} />
+      </View>
 
-            {/* Controls */}
-            <View style={styles.controlsContainer}>
-                <TouchableOpacity onPress={previous} style={styles.controlButton}>
-                    <Text style={styles.controlText}>Prev</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity onPress={handlePlayPause} style={[styles.controlButton, styles.playButton]}>
-                    <Text style={styles.playButtonText}>{isPlaying ? 'Pause' : 'Play'}</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity onPress={next} style={styles.controlButton}>
-                    <Text style={styles.controlText}>Next</Text>
-                </TouchableOpacity>
-            </View>
-        </SafeAreaView>
-    );
+      <View style={styles.controls}>
+        <Ionicons name="play-skip-back" size={28} onPress={previous} />
+        <TouchableOpacity style={styles.playButton} onPress={isPlaying ? pause : play}>
+          <Ionicons name={isPlaying ? 'pause' : 'play'} size={36} color="#fff" />
+        </TouchableOpacity>
+        <Ionicons name="play-skip-forward" size={28} onPress={next} />
+      </View>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: Colors.background,
-        alignItems: 'center',
-        paddingTop: 24,
-    },
-    artContainer: {
-        marginBottom: 30,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 5,
-        elevation: 8,
-    },
-    albumArt: {
-        width: 300,
-        height: 300,
-        borderRadius: 24,
-        backgroundColor: Colors.border,
-    },
-    infoContainer: {
-        alignItems: 'center',
-        marginBottom: 32,
-        paddingHorizontal: 20,
-    },
-    title: {
-        fontSize: 22,
-        fontWeight: '700',
-        textAlign: 'center',
-        color: Colors.text,
-    },
-    artist: {
-        fontSize: 16,
-        marginTop: 6,
-        color: Colors.secondary,
-        textAlign: 'center',
-    },
-    seekContainer: {
-        width: '80%',
-        marginBottom: 40,
-    },
-    seekBarTrack: {
-        height: 4,
-        backgroundColor: Colors.border,
-        borderRadius: 2,
-        marginBottom: 8,
-    },
-    seekBarProgress: {
-        width: '30%', // Static placeholder
-        height: '100%',
-        backgroundColor: Colors.primary,
-        borderRadius: 2,
-    },
-    timeLabels: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
-    timeText: {
-        color: Colors.secondary,
-        fontSize: 12,
-    },
-    controlsContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        width: '75%',
-        marginTop: 32,
-    },
-    controlButton: {
-        padding: 10,
-    },
-    controlText: {
-        fontSize: 16,
-        color: Colors.text,
-        fontWeight: '600',
-    },
-    playButton: {
-        backgroundColor: Colors.primary,
-        borderRadius: 40,
-        width: 80,
-        height: 80,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    playButtonText: {
-        fontSize: 18,
-        color: '#fff', // Always white on primary
-        fontWeight: 'bold',
-    },
-});
+  container: { flex: 1, backgroundColor: Colors.background, alignItems: 'center' },
 
+  header: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 16,
+  },
+
+  back: { color: Colors.primary },
+  headerTitle: { fontSize: 18, fontWeight: '600' },
+
+  art: { width: 260, height: 260, borderRadius: 20, marginTop: 24 },
+
+  title: { fontSize: 20, fontWeight: '700', marginTop: 24 },
+  artist: { fontSize: 16, color: Colors.secondary, marginBottom: 24 },
+
+  seekTrack: {
+    width: '80%',
+    height: 4,
+    backgroundColor: Colors.border,
+    borderRadius: 2,
+  },
+
+  seekProgress: {
+    width: '30%',
+    height: '100%',
+    backgroundColor: Colors.primary,
+  },
+
+  controls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 32,
+    marginTop: 40,
+  },
+
+  playButton: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: Colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});

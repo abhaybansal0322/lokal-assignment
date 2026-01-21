@@ -1,206 +1,177 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import {
-    View,
-    Text,
-    TextInput,
-    FlatList,
-    TouchableOpacity,
-    ActivityIndicator,
-    StyleSheet,
-    SafeAreaView,
-    Image,
+  View,
+  Text,
+  TextInput,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { searchSongs, getSongById } from '../api';
 import { usePlayerStore } from '../store/playerStore';
 import { SongSummary } from '../types/song';
 import { Colors } from '../constants/Colors';
 
 export default function HomeScreen() {
-    const [query, setQuery] = useState('');
-    const [results, setResults] = useState<SongSummary[]>([]);
-    const [page, setPage] = useState(1);
-    const [loading, setLoading] = useState(false);
-    const [hasMore, setHasMore] = useState(true);
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<SongSummary[]>([]);
+  const [activeTab, setActiveTab] = useState('Songs');
 
-    const setQueue = usePlayerStore((state) => state.setQueue);
+  const setQueue = usePlayerStore((s) => s.setQueue);
 
-    const handleSearch = async () => {
-        if (!query.trim()) return;
+  const handleSearch = async () => {
+    if (!query.trim()) return;
+    const { songs } = await searchSongs(query, 1);
+    setResults(songs);
+  };
 
-        setLoading(true);
-        setPage(1);
-        setResults([]);
-        setHasMore(true);
+  const playSong = async (song: SongSummary) => {
+    const fullSong = await getSongById(song.id);
+    console.log('[PLAY]', fullSong.title, fullSong.audioUrl);
+    setQueue([fullSong], 0);
+  };
 
-        try {
-            const { songs, total } = await searchSongs(query, 1);
-            setResults(songs);
-            setHasMore(songs.length < total && songs.length > 0);
-        } catch (error) {
-            console.error('Search failed', error);
-            setHasMore(false);
-        } finally {
-            setLoading(false);
-        }
-    };
+  const renderItem = ({ item }: { item: SongSummary }) => (
+    <TouchableOpacity style={styles.row} onPress={() => playSong(item)}>
+      <View style={styles.imageWrapper}>
+        <Image source={{ uri: item.imageUrl }} style={styles.image} />
+      </View>
 
-    const loadMore = async () => {
-        if (loading || !hasMore) return;
+      <View style={styles.textContainer}>
+        <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
+        <Text style={styles.artist} numberOfLines={1}>{item.artist}</Text>
+      </View>
 
-        setLoading(true);
-        const nextPage = page + 1;
+      <Ionicons name="play" size={22} color={Colors.primary} />
+    </TouchableOpacity>
+  );
 
-        try {
-            const { songs } = await searchSongs(query, nextPage);
-            if (songs.length === 0) {
-                setHasMore(false);
-            } else {
-                setResults((prev) => [...prev, ...songs]);
-                setPage(nextPage);
-            }
-        } catch (error) {
-            console.error('Load more failed', error);
-            setHasMore(false);
-        } finally {
-            setLoading(false);
-        }
-    };
+  return (
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerLeft}>
+          <Text style={styles.logoIcon}>🎵</Text>
+          <Text style={styles.logoText}>Mume</Text>
+        </View>
+        <Ionicons name="search" size={22} color={Colors.text} />
+      </View>
 
-    /**
-     * ✅ CORRECT PLAY HANDLER
-     * - Fetch full song details
-     * - Build playable queue
-     * - Let playerSync + audioService handle playback
-     */
-    const handleSongPress = useCallback(
-        async (song: SongSummary) => {
-            try {
-                setLoading(true);
+      {/* Search */}
+      <TextInput
+        style={styles.search}
+        placeholder="Search songs"
+        placeholderTextColor={Colors.secondary}
+        value={query}
+        onChangeText={setQuery}
+        onSubmitEditing={handleSearch}
+      />
 
-                const fullSong = await getSongById(song.id);
+      {/* Tabs */}
+      <View style={styles.tabs}>
+        {['Suggested', 'Songs', 'Artists', 'Albums'].map((tab) => (
+          <TouchableOpacity key={tab} onPress={() => setActiveTab(tab)}>
+            <Text style={[
+              styles.tabText,
+              activeTab === tab && styles.activeTabText,
+            ]}>
+              {tab}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
 
-                // Play only the tapped song (clean & correct)
-                setQueue([fullSong], 0);
-            } catch (error) {
-                console.error('Failed to play song', error);
-            } finally {
-                setLoading(false);
-            }
-        },
-        [setQueue]
-    );
-
-    const renderItem = ({ item }: { item: SongSummary }) => (
-        <TouchableOpacity
-            style={styles.itemContainer}
-            onPress={() => handleSongPress(item)}
-        >
-            <Image source={{ uri: item.imageUrl }} style={styles.itemImage} />
-            <View style={styles.itemInfo}>
-                <Text style={styles.itemTitle} numberOfLines={1}>
-                    {item.title}
-                </Text>
-                <Text style={styles.itemArtist} numberOfLines={1}>
-                    {item.artist}
-                </Text>
-            </View>
-        </TouchableOpacity>
-    );
-
-    return (
-        <SafeAreaView style={styles.container}>
-            <View style={styles.searchContainer}>
-                <TextInput
-                    style={styles.searchInput}
-                    placeholder="Search songs..."
-                    placeholderTextColor={Colors.border}
-                    value={query}
-                    onChangeText={setQuery}
-                    onSubmitEditing={handleSearch}
-                    returnKeyType="search"
-                />
-            </View>
-
-            {loading && page === 1 && (
-                <ActivityIndicator size="large" color={Colors.primary} style={styles.loader} />
-            )}
-
-            {!loading && results.length === 0 && (
-                <View style={{ marginTop: 48, alignItems: 'center' }}>
-                    <Text style={{ color: Colors.secondary, fontSize: 16 }}>
-                        Search for songs to begin
-                    </Text>
-                </View>
-            )}
-
-            <FlatList
-                data={results}
-                renderItem={renderItem}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={styles.listContent}
-                onEndReached={loadMore}
-                onEndReachedThreshold={0.5}
-                ListFooterComponent={
-                    loading && page > 1 ? <ActivityIndicator color={Colors.primary} /> : null
-                }
-            />
-        </SafeAreaView>
-    );
+      {results.length === 0 ? (
+        <Text style={styles.empty}>Search for songs to begin</Text>
+      ) : (
+        <FlatList
+          data={results}
+          keyExtractor={(i) => i.id}
+          renderItem={renderItem}
+          ItemSeparatorComponent={() => <View style={styles.separator} />}
+        />
+      )}
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: Colors.background,
-    },
-    searchContainer: {
-        paddingHorizontal: 16,
-        paddingTop: 12,
-        paddingBottom: 8,
-        backgroundColor: Colors.background,
-    },
-    searchInput: {
-        height: 48,
-        borderRadius: 12,
-        backgroundColor: Colors.card,
-        paddingHorizontal: 16,
-        fontSize: 16,
-        color: Colors.text,
-        borderWidth: 0,
-    },
-    loader: {
-        marginTop: 20,
-    },
-    listContent: {
-        padding: 16,
-        paddingBottom: 120,
-    },
-    itemContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 12,
-        marginBottom: 12,
-        borderRadius: 16,
-        backgroundColor: Colors.card,
-    },
-    itemImage: {
-        width: 56,
-        height: 56,
-        borderRadius: 12,
-        backgroundColor: Colors.border,
-    },
-    itemInfo: {
-        flex: 1,
-        marginLeft: 12,
-    },
-    itemTitle: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: Colors.text,
-    },
-    itemArtist: {
-        fontSize: 14,
-        color: Colors.secondary,
-        marginTop: 4,
-    },
+  container: { flex: 1, backgroundColor: Colors.background },
+
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+  },
+
+  headerLeft: { flexDirection: 'row', alignItems: 'center' },
+  logoIcon: { fontSize: 20 },
+  logoText: { fontSize: 22, fontWeight: '700', marginLeft: 6 },
+
+  search: {
+    marginHorizontal: 16,
+    marginBottom: 12,
+    padding: 12,
+    borderRadius: 14,
+    backgroundColor: '#F3F4F6',
+    fontSize: 16,
+  },
+
+  tabs: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 8,
+  },
+
+  tabText: {
+    fontSize: 14,
+    color: Colors.secondary,
+  },
+
+  activeTabText: {
+    color: Colors.primary,
+    fontWeight: '600',
+  },
+
+  empty: {
+    marginTop: 48,
+    textAlign: 'center',
+    color: Colors.secondary,
+  },
+
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+
+  imageWrapper: {
+    width: 48,
+    height: 48,
+    borderRadius: 8,
+    backgroundColor: Colors.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  image: {
+    width: 48,
+    height: 48,
+    borderRadius: 8,
+  },
+
+  textContainer: { flex: 1, marginLeft: 12 },
+
+  title: { fontSize: 16, fontWeight: '600' },
+  artist: { fontSize: 14, color: Colors.secondary, marginTop: 2 },
+
+  separator: {
+    height: 1,
+    backgroundColor: Colors.separator,
+    marginLeft: 76,
+  },
 });

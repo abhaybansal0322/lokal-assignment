@@ -63,23 +63,12 @@ export async function getSongById(id: string): Promise<PlayerSong> {
     const imageObj = songData.image.find((img) => img.quality === '500x500') || songData.image[songData.image.length - 1];
     const imageUrl = imageObj ? imageObj.link : '';
 
-    // extract highest quality audio URL safely
-    let audioUrl = '';
+    // extract highest quality audio URL
+    const audioObj = songData.downloadUrl.find(
+        (d) => d.quality === '320kbps'
+    ) || songData.downloadUrl[songData.downloadUrl.length - 1];
 
-    if (Array.isArray(songData.downloadUrl)) {
-        const validUrls = songData.downloadUrl.filter(
-            (u) => typeof u?.url === 'string' && u.url.length > 0
-        );
-
-        if (validUrls.length > 0) {
-            // pick highest quality (last item)
-            audioUrl = validUrls[validUrls.length - 1].url;
-        }
-    }
-
-    if (!audioUrl) {
-        throw new Error('No playable audio URL found for this song');
-    }
+    const audioUrl = audioObj?.url ?? '';
 
     return {
         id: songData.id,
