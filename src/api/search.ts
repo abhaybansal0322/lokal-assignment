@@ -50,9 +50,11 @@ export async function searchSongs(query: string, page: number): Promise<SearchRe
         return {
             id: item.id,
             title: item.name,
-            artist: item.primaryArtists,
-            duration: typeof item.duration === 'string' ? parseInt(item.duration, 10) : item.duration,
-            imageUrl: imageUrl,
+            artist: item.primaryArtists || 'Unknown Artist',
+            duration: typeof item.duration === 'string'
+                ? parseInt(item.duration, 10)
+                : item.duration,
+            imageUrl,
         };
     });
 

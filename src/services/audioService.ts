@@ -1,6 +1,7 @@
 import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';
 
 import { PlayerSong } from '../types/song';
+import { usePlayerStore } from '../store/playerStore';
 
 let sound: Audio.Sound | null = null;
 let currentSongId: string | null = null;
@@ -22,31 +23,37 @@ export async function initAudioMode() {
 
 
 export async function loadAndPlaySong(song: PlayerSong) {
-    if (currentSongId === song.id) return;
+  if (!song.audioUrl) return;
 
-    if (sound) {
-        await sound.stopAsync();
-        await sound.unloadAsync();
-        sound = null;
+  if (currentSongId === song.id) return;
+
+  if (sound) {
+    await sound.stopAsync();
+    await sound.unloadAsync();
+    sound = null;
+  }
+
+  const { sound: newSound } = await Audio.Sound.createAsync(
+    { uri: song.audioUrl },
+    { shouldPlay: true }
+  );
+
+  sound = newSound;
+  currentSongId = song.id;
+
+  sound.setOnPlaybackStatusUpdate((status) => {
+    if (!status.isLoaded) return;
+
+    const position = status.positionMillis / 1000;
+    const duration = (status.durationMillis ?? 0) / 1000;
+
+    usePlayerStore.getState().setProgress(position, duration);
+
+    // ✅ AUTO NEXT
+    if (status.didJustFinish) {
+      usePlayerStore.getState().next();
     }
-
-    try {
-        const { sound: newSound } = await Audio.Sound.createAsync(
-            { uri: song.audioUrl },
-            { shouldPlay: false }
-        );
-
-        sound = newSound;
-        currentSongId = song.id;
-
-        // ✅ play only once, manually
-        await newSound.playAsync();
-
-    } catch (error) {
-        console.error('Failed to load song:', error);
-        sound = null;
-        currentSongId = null;
-    }
+  });
 }
 
 export async function play() {

@@ -8,7 +8,11 @@ interface PlayerState {
     queue: PlayerSong[];
     currentIndex: number;
 
+    position: number; // seconds
+    duration: number; // seconds
+
     // Actions
+    setProgress: (position: number, duration: number) => void;
     setQueue: (songs: PlayerSong[], initialIndex?: number) => void;
     playSongAtIndex: (index: number) => void;
     play: () => void;
@@ -22,6 +26,12 @@ export const usePlayerStore = create<PlayerState>()(subscribeWithSelector((set, 
     isPlaying: false,
     queue: [],
     currentIndex: -1,
+    position: 0,
+    duration: 0,
+
+    setProgress: (position, duration) => {
+        set({ position, duration });
+    },
 
     setQueue: (songs, initialIndex = 0) => {
         if (songs.length === 0) {
@@ -69,6 +79,7 @@ export const usePlayerStore = create<PlayerState>()(subscribeWithSelector((set, 
                 currentIndex: nextIndex,
                 currentSong: queue[nextIndex],
                 isPlaying: true,
+                position: 0,
             });
         }
     },
@@ -81,6 +92,7 @@ export const usePlayerStore = create<PlayerState>()(subscribeWithSelector((set, 
                 currentIndex: prevIndex,
                 currentSong: queue[prevIndex],
                 isPlaying: true,
+                position: 0,
             });
         }
     },
