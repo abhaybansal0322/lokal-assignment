@@ -12,8 +12,6 @@ export default function MiniPlayer() {
   const play = usePlayerStore((s) => s.play);
   const pause = usePlayerStore((s) => s.pause);
 
-  console.log('[MINI PLAYER SONG]', song);
-
   if (!song) return null;
 
   return (
